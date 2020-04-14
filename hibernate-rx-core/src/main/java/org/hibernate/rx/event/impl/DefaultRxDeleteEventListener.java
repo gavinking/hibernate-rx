@@ -38,6 +38,8 @@ import java.io.Serializable;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 
+import static org.hibernate.rx.engine.impl.Cascade.fetchLazyAssociationsBeforeCascade;
+
 /**
  * A reactific {@link org.hibernate.event.internal.DefaultDeleteEventListener}.
  */
@@ -365,15 +367,18 @@ public class DefaultRxDeleteEventListener
 			EntityEntry entityEntry,
 			IdentitySet transientEntities) throws HibernateException {
 
+		CompletionStage<?> beforeDelete = fetchLazyAssociationsBeforeCascade( CascadingActions.DELETE, persister, entity, session );
+
 		CacheMode cacheMode = session.getCacheMode();
 		session.setCacheMode( CacheMode.GET );
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
 			// cascade-delete to collections BEFORE the collection owner is deleted
-			return new Cascade<>(CascadingActions.DELETE, CascadePoint.AFTER_INSERT_BEFORE_DELETE,
+			CompletionStage<Void> cascade = new Cascade<>(CascadingActions.DELETE, CascadePoint.AFTER_INSERT_BEFORE_DELETE,
 					persister, entity, transientEntities, session)
 					.cascade();
+			return beforeDelete.thenCompose( v -> cascade );
 		}
 		finally {
 			persistenceContext.decrementCascadeLevel();
