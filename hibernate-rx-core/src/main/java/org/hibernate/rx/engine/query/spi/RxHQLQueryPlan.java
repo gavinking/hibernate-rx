@@ -20,6 +20,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.rx.hql.internal.ast.RxQueryTranslatorImpl;
+import org.hibernate.rx.impl.RxSessionInternalImpl;
 import org.hibernate.rx.util.impl.RxUtil;
 
 public class RxHQLQueryPlan extends HQLQueryPlan {
@@ -108,7 +109,6 @@ public class RxHQLQueryPlan extends HQLQueryPlan {
 		}
 		AtomicInteger includedCount = new AtomicInteger( -1 );
 		CompletionStage<Void> combinedStage = RxUtil.nullFuture();
-		translator_loop:
 		for ( QueryTranslator translator : translators ) {
 			RxQueryTranslatorImpl rxTranslator = (RxQueryTranslatorImpl) translator;
 			combinedStage = combinedStage.thenCompose( v -> rxTranslator.rxList( session, queryParametersToUse ) )
@@ -129,15 +129,38 @@ public class RxHQLQueryPlan extends HQLQueryPlan {
 		final int first = queryParameters.getRowSelection().getFirstRow() == null ? 0 : queryParameters.getRowSelection().getFirstRow();
 		final int max = queryParameters.getRowSelection().getMaxRows() == null ? -1 : queryParameters.getRowSelection().getMaxRows();
 		for ( final Object result : tmpList ) {
-			if ( distinction.add( result ) ) {
-				int included = includedCount.addAndGet( 1 );
-				if ( included >= first ) {
-					combinedResults.add( result );
-					if ( max >= 0 && included > max ) {
-						return;
-					}
-				}
+			if ( !distinction.add( result ) ) {
+				continue;
+			}
+			int included = includedCount.addAndGet( 1 );
+			if ( included < first ) {
+				continue;
+			}
+			combinedResults.add( result );
+			if ( max >= 0 && included > max ) {
+				return;
 			}
 		}
+	}
+
+	public CompletionStage<Integer> performExecuteRxUpdate(QueryParameters queryParameters, SharedSessionContractImplementor session) {
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Execute update: {0}", getSourceQuery() );
+			queryParameters.traceParameters( session.getFactory() );
+		}
+		QueryTranslator[] translators = getTranslators();
+		if ( translators.length != 1 ) {
+			LOG.splitQueries( getSourceQuery(), translators.length );
+		}
+		AtomicInteger includedCount = new AtomicInteger( 0 );
+		CompletionStage<Void> combinedStage = RxUtil.nullFuture();
+		for ( QueryTranslator translator : translators ) {
+			RxQueryTranslatorImpl rxTranslator = (RxQueryTranslatorImpl) translator;
+			combinedStage = combinedStage
+					.thenCompose( v -> rxTranslator.executeRxUpdate( queryParameters, session ) )
+					.thenAccept( count -> includedCount.addAndGet( count ) );
+		}
+		return combinedStage.thenApply( ignore -> includedCount.get() );
+
 	}
 }

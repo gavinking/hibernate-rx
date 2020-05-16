@@ -32,7 +32,7 @@ public class RxSessionFactoryImpl extends SessionFactoryImpl
 	public RxSessionFactoryImpl(
 			MetadataImplementor metadata,
 			SessionFactoryOptions options) {
-		super( metadata, options, factory -> new RxQueryPlanCache( factory ) );
+		super( metadata, options, RxQueryPlanCache::new );
 	}
 
 	@Override
