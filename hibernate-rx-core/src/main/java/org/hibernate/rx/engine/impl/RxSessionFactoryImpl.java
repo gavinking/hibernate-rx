@@ -10,14 +10,13 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.SessionFactoryRegistry.ObjectFactoryImpl;
 import org.hibernate.rx.RxSession;
 import org.hibernate.rx.RxSessionFactory;
 import org.hibernate.rx.boot.impl.RxSessionFactoryBuilderImpl;
-import org.hibernate.rx.engine.query.spi.RxQueryPlanCache;
+import org.hibernate.rx.engine.query.spi.RxHQLQueryPlan;
 import org.hibernate.rx.engine.spi.RxSessionBuilderImplementor;
 import org.hibernate.rx.impl.RxSessionBuilderDelegator;
 
@@ -32,7 +31,7 @@ public class RxSessionFactoryImpl extends SessionFactoryImpl
 	public RxSessionFactoryImpl(
 			MetadataImplementor metadata,
 			SessionFactoryOptions options) {
-		super( metadata, options, RxQueryPlanCache::new );
+		super( metadata, options, RxHQLQueryPlan::new );
 	}
 
 	@Override
