@@ -62,6 +62,7 @@ public abstract class BaseReactiveTest {
 
 	protected Configuration constructConfiguration() {
 		Configuration configuration = new Configuration();
+		configuration.setProperty( Settings.PREPARED_STATEMENT_CACHE_MAX_SIZE, "10");
 		configuration.setProperty( Settings.HBM2DDL_AUTO, "create" );
 		configuration.setProperty( Settings.URL, DatabaseConfiguration.getJdbcUrl() );
 		configuration.setProperty( Settings.SHOW_SQL, "true" );
