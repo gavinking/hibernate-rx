@@ -134,3 +134,18 @@ class Version {
         "$major.$minor"
     }
 }
+
+task copyReadme(type: Copy) {
+    from '.'
+    include '*.md'
+    into buildDir
+    filter { line -> line.replaceAll('1.0.0-SNAPSHOT', projectVersion.toString()) }
+}
+
+task copyLicense(type: Copy) {
+    from 'LICENSE'
+    into buildDir
+}
+
+assemble.dependsOn copyReadme
+assemble.dependsOn copyLicense
