@@ -169,7 +169,10 @@ public class ReactiveSessionImpl extends SessionImpl implements ReactiveSession,
 		else if ( association instanceof PersistentCollection ) {
 			PersistentCollection persistentCollection = (PersistentCollection) association;
 			return reactiveInitializeCollection( persistentCollection, false )
-					.thenApply( pc -> association );
+					.thenApply( pc -> {
+						persistentCollection.setCurrentSession( this );
+						return association;
+					} );
 		}
 		else {
 			return CompletionStages.completedFuture( association );
