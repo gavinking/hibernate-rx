@@ -100,7 +100,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static org.hibernate.reactive.util.impl.CompletionStages.completedFuture;
+import static org.hibernate.reactive.util.impl.CompletionStages.*;
 
 /**
  * An {@link ReactiveSession} implemented by extension of
@@ -313,7 +313,7 @@ public class ReactiveSessionImpl extends SessionImpl implements ReactiveSession,
 					else if ( e instanceof RuntimeException ) {
 						throw getExceptionConverter().convert( (RuntimeException) e );
 					}
-					return CompletionStages.returnNullorRethrow( e );
+					return returnNullorRethrow( e );
 				} );
 	}
 
@@ -589,7 +589,7 @@ public class ReactiveSessionImpl extends SessionImpl implements ReactiveSession,
 					else if (e instanceof RuntimeException) {
 						throw getExceptionConverter().convert( (RuntimeException) e );
 					}
-					return CompletionStages.returnNullorRethrow( e );
+					return returnNullorRethrow( e );
 				});
 	}
 
@@ -607,7 +607,7 @@ public class ReactiveSessionImpl extends SessionImpl implements ReactiveSession,
 					else if (e instanceof RuntimeException) {
 						throw getExceptionConverter().convert( (RuntimeException) e );
 					}
-					return CompletionStages.returnNullorRethrow( e );
+					return returnNullorRethrow( e );
 				});
 	}
 
@@ -667,7 +667,7 @@ public class ReactiveSessionImpl extends SessionImpl implements ReactiveSession,
 						//including HibernateException
 						throw getExceptionConverter().convert( (RuntimeException) e );
 					}
-					return CompletionStages.returnNullorRethrow( e );
+					return returnNullorRethrow( e );
 				});
 	}
 
@@ -689,7 +689,7 @@ public class ReactiveSessionImpl extends SessionImpl implements ReactiveSession,
 						//including HibernateException
 						throw getExceptionConverter().convert( (RuntimeException) e );
 					}
-					return CompletionStages.returnNullorRethrow( e );
+					return returnNullorRethrow( e );
 				});
 	}
 
@@ -726,8 +726,8 @@ public class ReactiveSessionImpl extends SessionImpl implements ReactiveSession,
 						//including HibernateException
 						throw getExceptionConverter().convert( (RuntimeException) e );
 					}
-					return CompletionStages.returnOrRethrow( e, (T) event.getResult() );
-				});
+					return returnOrRethrow( e, (T) event.getResult() );
+				} );
 	}
 
 	private CompletionStage<Void> fireMerge(MergeContext copiedAlready, MergeEvent event) {
@@ -748,7 +748,7 @@ public class ReactiveSessionImpl extends SessionImpl implements ReactiveSession,
 						//including HibernateException
 						throw getExceptionConverter().convert( (RuntimeException) e );
 					}
-					return CompletionStages.returnNullorRethrow( e );
+					return returnNullorRethrow( e );
 				});
 
 	}
@@ -761,9 +761,7 @@ public class ReactiveSessionImpl extends SessionImpl implements ReactiveSession,
 
 	@Override
 	public CompletionStage<Void> reactiveAutoflush() {
-		return getHibernateFlushMode().lessThan( FlushMode.COMMIT )
-				? CompletionStages.voidFuture()
-				: doFlush();
+		return getHibernateFlushMode().lessThan( FlushMode.COMMIT ) ? voidFuture() : doFlush();
 	}
 
 	private CompletionStage<Void> doFlush() {
@@ -784,7 +782,7 @@ public class ReactiveSessionImpl extends SessionImpl implements ReactiveSession,
 							e = getExceptionConverter().convert( (RuntimeException) e.getCause() );
 						}
 					}
-					return CompletionStages.returnNullorRethrow( e );
+					return returnNullorRethrow( e );
 				} );
 	}
 
@@ -831,13 +829,13 @@ public class ReactiveSessionImpl extends SessionImpl implements ReactiveSession,
 					if (e instanceof RuntimeException) {
 						if ( !getSessionFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
 							if ( e instanceof HibernateException ) {
-								return CompletionStages.rethrow(e);
+								return rethrow(e);
 							}
 						}
 						//including HibernateException
 						throw getExceptionConverter().convert( (RuntimeException) e );
 					}
-					return CompletionStages.returnNullorRethrow( e );
+					return returnNullorRethrow( e );
 				});
 	}
 
@@ -852,7 +850,7 @@ public class ReactiveSessionImpl extends SessionImpl implements ReactiveSession,
 					if (e instanceof RuntimeException) {
 						throw getExceptionConverter().convert( (RuntimeException) e );
 					}
-					return CompletionStages.returnNullorRethrow( e );
+					return returnNullorRethrow( e );
 				});
 	}
 
@@ -872,7 +870,7 @@ public class ReactiveSessionImpl extends SessionImpl implements ReactiveSession,
 					if (e instanceof RuntimeException) {
 						throw getExceptionConverter().convert( (RuntimeException) e );
 					}
-					return CompletionStages.returnNullorRethrow( e );
+					return returnNullorRethrow( e );
 				});
 	}
 
@@ -957,7 +955,7 @@ public class ReactiveSessionImpl extends SessionImpl implements ReactiveSession,
 			E event,
 			EventType<L> eventType,
 			Function<RL, Function<E, CompletionStage<T>>> fun) {
-		CompletionStage<T> ret = CompletionStages.nullFuture();
+		CompletionStage<T> ret = nullFuture();
 		for ( L listener : eventListeners( eventType ) ) {
 			//to preserve atomicity of the Session methods
 			//call apply() from within the arg of thenCompose()
@@ -969,13 +967,12 @@ public class ReactiveSessionImpl extends SessionImpl implements ReactiveSession,
 	@SuppressWarnings("unchecked")
 	private <E,L,RL,P> CompletionStage<Void> fire(E event, P extra, EventType<L> eventType,
 												  Function<RL, BiFunction<E, P, CompletionStage<Void>>> fun) {
-		CompletionStage<Void> ret = CompletionStages.voidFuture();
-		for ( L listener : eventListeners(eventType) ) {
-			//to preserve atomicity of the Session methods
-			//call apply() from within the arg of thenCompose()
-			ret = ret.thenCompose( v -> fun.apply((RL) listener).apply(event, extra) );
-		}
-		return ret;
+		//to preserve atomicity of the Session methods
+		//call apply() from within the arg of thenCompose()
+		return CompletionStages.loop(
+				eventListeners(eventType),
+				listener -> fun.apply((RL) listener).apply(event, extra)
+		);
 	}
 
 	@SuppressWarnings("deprecation")
