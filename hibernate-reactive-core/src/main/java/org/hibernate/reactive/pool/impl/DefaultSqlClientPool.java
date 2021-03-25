@@ -181,6 +181,10 @@ public class DefaultSqlClientPool extends SqlClientPool
 					if ( "cockroachdb".equalsIgnoreCase( scheme ) ) {
 						return d;
 					}
+				case "com.microsoft.sqlserver.jdbc.SQLServerDriver":
+					if ( "sqlserver".equalsIgnoreCase( scheme ) ) {
+						return d;
+					}
 			}
 		}
 		throw new ConfigurationException( "No suitable drivers found for URI scheme: " + scheme, originalError );

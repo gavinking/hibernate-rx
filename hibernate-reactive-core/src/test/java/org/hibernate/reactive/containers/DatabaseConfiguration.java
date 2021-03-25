@@ -20,9 +20,10 @@ public class DatabaseConfiguration {
 	public enum DBType {
 		DB2( DB2Database.INSTANCE, 50000, false ),
 		MYSQL( MySQLDatabase.INSTANCE, 3306, false ),
-		MARIA( MariaDatabase.INSTANCE, 3306, false, "mariadb" ),
+		MARIA( MariaDatabase.INSTANCE, 3306, false, "MARIADB" ),
 		POSTGRESQL( PostgreSQLDatabase.INSTANCE, 5432, true, "POSTGRES", "PG" ),
-		COCKROACHDB( CockroachDBDatabase.INSTANCE, 26257, true, "COCKROACH" );
+		COCKROACHDB( CockroachDBDatabase.INSTANCE, 26257, true, "COCKROACH" ),
+		SQLSERVER( SqlServerDatabase.INSTANCE, 1433, false, "SQLSERVER" );
 
 		private final TestableDatabase configuration;
 		private final int defaultPort;

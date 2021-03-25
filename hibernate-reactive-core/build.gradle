@@ -37,6 +37,7 @@ dependencies {
     testImplementation "io.vertx:vertx-pg-client:${vertxVersion}"
     testImplementation "io.vertx:vertx-mysql-client:${vertxVersion}"
     testImplementation "io.vertx:vertx-db2-client:${vertxVersion}"
+    testImplementation "io.vertx:vertx-mssql-client:${vertxVersion}"
 
     // JDBC driver to test with ORM and PostgreSQL
     testRuntimeOnly "org.postgresql:postgresql:42.2.16"
@@ -58,6 +59,7 @@ dependencies {
     testImplementation "org.testcontainers:mysql:${testcontainersVersion}"
     testImplementation "org.testcontainers:mariadb:${testcontainersVersion}"
     testImplementation "org.testcontainers:db2:${testcontainersVersion}"
+    testImplementation "org.testcontainers:mssqlserver:${testcontainersVersion}"
     testImplementation "org.testcontainers:cockroachdb:${testcontainersVersion}"
 }
 

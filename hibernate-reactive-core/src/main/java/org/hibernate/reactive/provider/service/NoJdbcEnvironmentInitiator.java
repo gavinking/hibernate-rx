@@ -7,12 +7,7 @@ package org.hibernate.reactive.provider.service;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
-import org.hibernate.dialect.CockroachDB201Dialect;
-import org.hibernate.dialect.DB297Dialect;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.MariaDB103Dialect;
-import org.hibernate.dialect.MySQL8Dialect;
-import org.hibernate.dialect.PostgreSQL10Dialect;
+import org.hibernate.dialect.*;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolutionInfoAdapter;
@@ -128,10 +123,13 @@ public class NoJdbcEnvironmentInitiator extends JdbcEnvironmentInitiator {
 			return PostgreSQL10Dialect.class;
 		}
 		else if ( url.startsWith("db2:") ) {
-			return  DB297Dialect.class;
+			return DB297Dialect.class;
 		}
 		else if ( url.startsWith("cockroachdb:") ) {
-			return  CockroachDB201Dialect.class;
+			return CockroachDB201Dialect.class;
+		}
+		else if ( url.startsWith("sqlserver:") ) {
+			return SQLServer2012Dialect.class;
 		}
 		else {
 			return null;
